@@ -93,7 +93,7 @@ server.get('/me', verifyToken, (req, res) => {
 server.use(router);
 
 // Start the server
-const PORT = 3000;
+const PORT = 8080;
 server.listen(PORT, () => {
   console.log(`JSON Server is running on http://localhost:${PORT}`);
 });
