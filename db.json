@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "password": "password123",
+      "phone": "1234567890"
+    },
+    {
+      "id": 2,
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "password": "password456",
+      "phone": "0987654321"
+    },
+    {
+      "id": 3,
+      "name": "New User",
+      "email": "newuser@example.com",
+      "password": "newpassword",
+      "phone": "1234567890"
+    }
+  ]
+}
