@@ -5,21 +5,108 @@ const middlewares = jsonServer.defaults();
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const setupSwagger = require('./swagger');
+const verifyToken = require('./middlewares/authMiddleware');
 
-const SECRET_KEY = 'ahademy_secret'; // Ganti dengan kunci rahasia Anda
+const SECRET_KEY = 'ahademy_secret';
+
+setupSwagger(server);
 
 server.use(bodyParser.json());
 server.use(cookieParser());
 server.use(middlewares);
 
-// Fungsi untuk membuat token
 const createToken = (user) => {
   return jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, {
     expiresIn: '1h',
   });
 };
 
-// Login endpoint
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management
+ */
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     tags: [Users]
+ *     description: Login user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid email or password
+ */
+
+/**
+ * @swagger
+ * /signup:
+ *   post:
+ *     tags: [Users]
+ *     description: Signup user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Signup successful
+ *       400:
+ *         description: Email already exists
+ */
+
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     tags: [Users]
+ *     description: Logout user
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+
+/**
+ * @swagger
+ * /me:
+ *   get:
+ *     tags: [Users]
+ *     description: Get current user
+ *     responses:
+ *       200:
+ *         description: User data
+ *       403:
+ *         description: No token provided
+ *       401:
+ *         description: Unauthorized
+ */
+
 server.post('/login', (req, res) => {
   const { email, password } = req.body;
   const db = router.db;
@@ -27,14 +114,13 @@ server.post('/login', (req, res) => {
 
   if (user) {
     const token = createToken(user);
-    res.cookie('token', token, { httpOnly: true }); // Set cookie JWT
+    res.cookie('token', token, { httpOnly: true });
     res.status(200).json({ message: 'Login successful', user });
   } else {
     res.status(401).json({ error: 'Invalid email or password' });
   }
 });
 
-// Signup endpoint
 server.post('/signup', (req, res) => {
   const { name, email, password, phone } = req.body;
   const db = router.db;
@@ -52,33 +138,16 @@ server.post('/signup', (req, res) => {
     };
     db.get('users').push(newUser).write();
     const token = createToken(newUser);
-    res.cookie('token', token, { httpOnly: true }); // Set cookie JWT
+    res.cookie('token', token, { httpOnly: true });
     res.status(201).json({ message: 'Signup successful', user: newUser });
   }
 });
 
-// Logout endpoint
 server.post('/logout', (req, res) => {
-  res.clearCookie('token'); // Hapus cookie JWT
+  res.clearCookie('token');
   res.status(200).json({ message: 'Logout successful' });
 });
 
-// Middleware untuk memverifikasi token
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(403).json({ error: 'No token provided' });
-  }
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    req.userId = decoded.id;
-    next();
-  });
-};
-
-// Endpoint untuk mendapatkan data pengguna setelah login/signup
 server.get('/me', verifyToken, (req, res) => {
   const db = router.db;
   const user = db.get('users').find({ id: req.userId }).value();
@@ -89,11 +158,10 @@ server.get('/me', verifyToken, (req, res) => {
   }
 });
 
-// Use default router
 server.use(router);
 
-// Start the server
 const PORT = 8080;
 server.listen(PORT, () => {
   console.log(`JSON Server is running on http://localhost:${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
