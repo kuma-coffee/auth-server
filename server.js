@@ -4,6 +4,7 @@ const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const setupSwagger = require('./swagger');
 const verifyToken = require('./middlewares/authMiddleware');
@@ -12,6 +13,12 @@ const SECRET_KEY = 'ahademy_secret';
 
 setupSwagger(server);
 
+server.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  })
+);
 server.use(bodyParser.json());
 server.use(cookieParser());
 server.use(middlewares);
@@ -122,7 +129,7 @@ server.post('/login', (req, res) => {
 });
 
 server.post('/signup', (req, res) => {
-  const { name, email, password, phone } = req.body;
+  const { name, email, password, phoneNumber } = req.body;
   const db = router.db;
   const existingUser = db.get('users').find({ email }).value();
 
@@ -134,7 +141,7 @@ server.post('/signup', (req, res) => {
       name,
       email,
       password,
-      phone,
+      phoneNumber,
     };
     db.get('users').push(newUser).write();
     const token = createToken(newUser);
