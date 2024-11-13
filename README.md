@@ -22,6 +22,7 @@ Make sure you have Node.js and npm installed. You can download them from [Node.j
    ```bash
    npm install
    ```
+4. Download firebase-adminsdk.json from this [link](https://drive.google.com/drive/folders/1M1r1Na1W6UXrb9F8IEyNFWXe2B0y7Kqn?usp=sharing) and put in firebase folder
 
 ### Running the Server
 

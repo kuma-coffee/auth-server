@@ -8,6 +8,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const setupSwagger = require('./swagger');
 const verifyToken = require('./middlewares/authMiddleware');
+const admin = require('./firebase/firebase-admin');
 
 const SECRET_KEY = 'ahademy_secret';
 
@@ -79,7 +80,7 @@ const createToken = (user) => {
  *                 type: string
  *               password:
  *                 type: string
- *               phone:
+ *               phoneNumber:
  *                 type: string
  *     responses:
  *       201:
@@ -114,6 +115,7 @@ const createToken = (user) => {
  *         description: Unauthorized
  */
 
+// Authentication using email and password
 server.post('/login', (req, res) => {
   const { email, password } = req.body;
   const db = router.db;
@@ -162,6 +164,48 @@ server.get('/me', verifyToken, (req, res) => {
     res.status(200).json(user);
   } else {
     res.status(404).json({ error: 'User  not found' });
+  }
+});
+
+// Authentication using google Firebaase
+server.post('/google-login', async (req, res) => {
+  const { id_token } = req.body;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(id_token);
+    const uid = decodedToken.uid;
+
+    res.cookie('token', id_token, { httpOnly: true });
+    res.status(200).json({ uid });
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+server.get('/user/google', async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(403).json({ error: 'No token provided' });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userRecord = await admin.auth().getUser(uid);
+
+    const userInfo = {
+      uid: userRecord.uid,
+      name: userRecord.displayName,
+      email: userRecord.email,
+      photoURL: userRecord.photoURL,
+    };
+
+    res.status(200).json(userInfo);
+  } catch (error) {
+    console.error('Error verifying token or retrieving user:', error);
+    res.status(401).json({ error: 'Invalid token or user not found' });
   }
 });
 
